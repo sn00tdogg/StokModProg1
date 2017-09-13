@@ -1,5 +1,110 @@
 #Klikk edit og fyll inn koda her :)
+import numpy as np
+import matplotlib.pyplot as plt
+import random
+from math import exp
 
+
+def plotFunctions(xValues, yValues, name):
+    plt.figure(name)
+    plt.plot(xValues, yValues, 'ro')
+    plt.show()
+
+
+def main(n):
+    listOfPoints=[]
+    xList=[]
+    for k in range (1,n):
+        listOfPoints.append((k/n)*np.log(n/k))
+        xList.append(k)
+    plotFunctions(xList,listOfPoints, "Oppgave 1b)")
+
+
+
+def createCase(N):
+    n=N
+    a=[]
+    for i in range(n):
+        r=(random.randint(1,1000))
+        a.append(r)
+    #a.sort()
+    return a
+
+def caseSimulationsForBestCandidate(numberOfSimulations,numberOfCandidates):
+    listOfCases=[]
+    numberOfSucsesses = 0
+    for i in range(numberOfSimulations):
+        if findingBestCandidate(numberOfCandidates)==True:
+            numberOfSucsesses+=1
+    return numberOfSucsesses
+
+def caseSimulationsForTopThree(numberOfSimulations,numberOfCandidates):
+    listOfCases=[]
+    numberOfSucsesses = 0
+    for i in range(numberOfSimulations):
+        if findingOneOfTheThreeBestCandidate(numberOfCandidates)==True:
+            numberOfSucsesses+=1
+    return numberOfSucsesses
+
+
+def findingBestCandidate(numberOfCandidates):
+    Case = createCase(numberOfCandidates)
+    maxValue = 0
+    k = numberOfCandidates // exp(1)
+    k = int(k)
+    bestCandidate = 0
+    for j in range(numberOfCandidates):
+        if Case[j] > bestCandidate:
+            bestCandidate = Case[j]
+    #print(bestCandidate)
+    for j in range(k):
+        if Case[j] > maxValue:
+            maxValue = Case[j]
+        if Case[j]==bestCandidate:
+            #print("tilfelle 1")
+            return False
+    for j in range(k, numberOfCandidates):  # blir det riktig å bruke k her, eller k-1?
+        if (Case[j] > maxValue) and (Case[j] < bestCandidate):
+            #print("tilfelle 2")
+            return False
+        elif (Case[j] > maxValue) and (Case[j] == bestCandidate):
+            #print("tilfelle 3")
+            return True
+
+def findingOneOfTheThreeBestCandidate(numberOfCandidates):
+    Case = createCase(numberOfCandidates)
+    maxValue = 0
+    k = numberOfCandidates // exp(1)
+    k = int(k)
+    bestCandidate = 0
+    secondBest = 0
+    thirdBest = 0
+    for j in range(numberOfCandidates):
+        if Case[j] > bestCandidate:
+            thirdBest = secondBest
+            secondBest = bestCandidate
+            bestCandidate = Case[j]
+    #print(bestCandidate)
+    for j in range(k):
+        if Case[j] > maxValue:
+            maxValue = Case[j]
+        if Case[j]==bestCandidate:
+            #print("tilfelle 1")
+            return False
+    for j in range(k, numberOfCandidates):  # blir det riktig å bruke k her, eller k-1?
+        if (Case[j] > maxValue) and (Case[j] < thirdBest):
+            #print("tilfelle 2")
+            return False
+        elif (Case[j] > maxValue) and (Case[j] == bestCandidate or Case[j]==secondBest or Case[j]==thirdBest):
+            #print("tilfelle 3")
+            return True
+
+n=10000
+kandidater = 300
+
+print("Den beste kandidaten blir ansatt ", caseSimulationsForBestCandidate(n,kandidater), " av ",n," ganger!" )
+
+print("En av de tre beste blir ansatt ", caseSimulationsForTopThree(n,kandidater), " av ",n," ganger!" )
 
 
 
