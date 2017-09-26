@@ -322,3 +322,351 @@ for i in range(steps-1):
     conditionalProbListB.append((1-pList[steps-i-2])/(1-pList[steps-1]))
 
 """
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from random import *
+from math import exp
+
+
+
+
+nList=[]
+pList=[]
+n30List=[]
+n20List=[]
+for i in range(1,51):
+    nList.append(i)
+    pList.append(.99*(.95)**(i-1))
+for i in range(30):
+    n30List.append(21+i)
+for i in range(19):          #Trenger bare telle ned til 1
+    n20List.append(19-i)
+
+def plotFunctions(xValues, yValues, name):
+    plt.figure(name)
+    plt.plot(xValues, yValues, 'ro')   #Fjern 'ro' for å gjøre graf kont
+    plt.show()
+
+
+#2a)         ##############################
+
+def computeAndPlotMarginalProbabilities(nList,pList):
+    for i in range(1,51):
+         nList.append(i)
+    for i in range(50):
+         pList.append(.99*(.95)**(i))
+    print(pList)
+         #print((0.95)**(i))
+    plotFunctions(nList,pList,"2a")
+
+
+#2b)        ##############################
+
+def create2bCase(nList,pList):
+    for i in range(len(nList)):
+        a=randint(0,10000)/10000 #kaster tilfeldig tall i [0,1] med 4 desimaler
+        if pList[i]<a:
+            return nList[i]
+    return (len(nList)+1)
+
+def create2bCases():
+    nList=[]
+    pList=[]
+    for i in range(1,50):        #går opp til n-1, altså teller fom 1 tom 50
+        nList.append(i)
+    lowestNValues=[]
+    for i in range(50):
+        pList.append(.99*(.95)**(i))
+    for i in range(25):                #teller fom 0 tom 24
+        lowestNValues.append(create2bCase(nList,pList))
+    return lowestNValues # er en liste
+
+
+
+
+
+def graphBars(lowestNList):
+   N=25
+   nChange=lowestNList
+   ind=(np.arange(N)/2)
+   width=0.40
+   fig, ax=plt.subplots()
+   rects=ax.bar(ind,lowestNList,width,color='r',yerr=0)
+   ax.set_ylabel('Lowest n for state 2')
+   ax.set_title('Time for risk increase in 25 cases')
+   ax.set_xticks(ind + width / 2)
+   ax.set_xticklabels(('', '', '', '', ''))
+   #ax.legend((rects1[0], rects2[0]), ('Men', 'Women'))
+
+   for rect in rects:
+       height = rect.get_height()
+       ax.text(rect.get_x() + rect.get_width()/2., 1.05*height,'%d' % int(height),ha='center', va='bottom')
+   plt.show()
+   plt.savefig
+
+
+#2c     ##############################
+def forwardProb(k):
+    a=k
+    conditionalProbListF=[]    #Prob of future 2 given current 1
+    for i in range(1,51):                           #trenger bare 49 overganger, siden det er 50 tidssteg
+        if i<k:
+            conditionalProbListF.append(0)
+        else:
+            conditionalProbListF.append(1-0.95**(i-k+1))
+    #print(conditionalProbListF)
+    #print(len(conditionalProbListF))
+    return conditionalProbListF
+#forwardProb(1) #first input is k
+
+
+def backwardProbState2(k,pList):
+    #print(pList)
+    conditionalProbListB=[]         #Prob of past 2 given current 2
+    #print(conditionalProbListB)
+    for i in range(1,k):            #stops one step short of k
+        #print(pList[i-1],pList[k-1])
+        conditionalProbListB.append((1-pList[i-1])/(1-pList[k-1]))
+    #print(conditionalProbListB)
+    return conditionalProbListB
+#print(backwardProbState2(3,pList))
+
+
+#2d ##############################
+def cleaningCost(nList,pList):
+    a=0
+    for i in range(50):
+        a+=(1-pList[i])
+    print(a)
+    a*=5000
+    print("Cost of cleaning each high risk location is ",a)
+
+#2e ##############################
+def infoFunction(pList):
+    v_KList=[]
+    for k in range(1,50): #(1,51)
+
+        sumState1=0.0
+        sumState2=0.0
+        sumForSingleKValue=0.0
+        forwardList=forwardProb(k)
+        backwardList=backwardProbState2(k,pList)
+        print(backwardList)
+        for n in range(1,51): #Case i=1
+            if n > k:
+                sumState1 += forwardList[n-2]               #Starts counting at k=1,n=2: will need n-2 to get 0 index
+                print("K=",k,"N=",n, " N-2=",n-2,forwardList[n-2])
+        for n in range(1,51): #Case i=2
+            if n < k:
+                sumState2 += backwardList[n-1]
+            elif n == k:
+                sumState2 += 1
+            else:
+                sumState2 += 1
+        print("Part sums of v_K are:",sumState1,sumState2)
+        if sumState1*5000 < 10**5:
+            sumForSingleKValue+=sumState1*5000*pList[k-1]
+        else:
+            sumForSingleKValue+=10**5
+        if sumState2*5000 < 10**5:
+            sumForSingleKValue+=sumState2*5000*(1-pList[k-1])
+        else:
+            sumForSingleKValue+=10**5
+        v_KList.append(sumForSingleKValue)
+    return v_KList
+print(infoFunction(pList))
+
+
+
+
+
+
+"""
+Kall:
+
+
+
+newCaseList=(create2bCases())
+print(newCaseList)
+newCaseList.sort()
+graphBars(newCaseList)
+
+
+
+backwardPList=backwardProbState2(20)
+oneList=[]             #Liste med 19 1'ere til å grafe case't P(X_l=2|X_k=2)
+for i in range(30):
+    oneList.append(1)
+
+
+computeAndPlotMarginalProbabilities(nlist,plist)
+
+
+print(len(plist),len(nlist))
+newCaseList=(create2bCases())
+print(newCaseList)
+newCaseList.sort()
+print(newCaseList)
+graphBars(newCaseList)
+
+
+plotFunctions(n20list,backwardProbState2(),'BackwardRiskState2')
+plotFunctions(n20list,oneList,'BackwardRiskState1')
+plotFunctions(n30list,forwardProb(),'2cForwardRiskState1')
+plotFunctions(n30list,oneList,'2cForwardRiskState2')
+print(len(n30list),len(forwardProb()))
+
+
+
+
+
+backwardPList=backwardProbState2(20)
+oneList=[]             #Liste med 19 1'ere til å grafe case't P(X_l=2|X_k=2)
+
+for i in range(30):
+    oneList.append(1)
+
+#plotFunctions(n20list,backwardProbState2(),'BackwardRiskState2')
+#plotFunctions(n20list,oneList,'BackwardRiskState1')
+#plotFunctions(n30list,forwardProb(),'2cForwardRiskState1')
+plotFunctions(n30list,oneList,'2cForwardRiskState2')
+print(len(n30list),len(forwardProb()))
+
+
+
+cleaningCost(nList,pList)
+
+
+computeAndPlotMarginalProbabilities(nlist,plist)
+
+plotFunctions(n20list,backwardProb(),'2cBackwardRisk')
+
+plotFunctions(n30list,forwardProb(),'2cForwardRisk')
+
+print(n20list,n30list)
+print(plist)
+print(nlist)
+
+
+
+
+print(newCaseList)
+"""
+
+
+
+
+
+"""
+####################################################
+print(forwardProb())
+
+
+#testing create 2b case:
+testlist1=[1,2,3,4]
+testlist2=[.99,.99,.99,.99]
+print(create2bCase(testlist1,testlist2))
+
+
+
+a=create2bCases()
+#print(a,max(a))
+
+Kjør 1000 2b-case, print høyeste lowestN
+def printMaxOf1000Cases2b():
+    a=0
+    for i in range(1000):
+        b=create2bCases()
+        if max(b)>a:
+            a=max(b)
+    print(a)
+
+
+
+#print(randint(0,10000)/10000)
+
+
+
+smud måte å lage 50-liste på:
+a=[i for i in range(50)]
+#print(a)
+
+funksjonskall som gir global forandring:
+testlist=[]
+def fillTestlist(list):
+    list.append(2)
+    return list
+#print(fillTestlist(testlist))
+
+
+Er alle forandringer globale i funksjonskall i Python?
+from random import *
+a=[]
+print(a)
+def addToList(a):
+    a.append(randint(1,10))
+    a.append(37)
+    print(a)
+    return a
+print(a)
+print(addToList(a))
+print(a)
+
+
+for i in range(1,51):        #går opp til n-1, altså teller fom 1 tom 50
+        nlist.append(i)
+
+
+
+print(int(True)) #returns 1
+
+#Virker ikke:
+def forwardProb(nlist):
+    plist=[]
+    for i in range(1,21):
+        plist.append(0.95*nlist[i])
+    return plist
+print(forwardProb(nlist))
+
+
+print(len(n30list))
+print(len(forwardProb()))
+
+#GAmmel grafer 2b
+def graphCases2b(nlist,plist):
+    a=create2bCases()
+    print(len(nlist),len(a))
+    plotFunctions(nlist,a,"2b")
+
+graphCases2b(nlist,plist)
+
+
+for i in range(steps-1):
+    conditionalProbListB.append((1-pList[steps-i-2])/(1-pList[steps-1]))
+
+"""
